@@ -88,13 +88,9 @@ export default function Home() {
         // Debug: log full response so you can inspect the real shape
         if (!glb) {
           console.warn("[xaeuzinha] GLB not found. Full API response:", JSON.stringify(data, null, 2));
-          // Fallback to local GLB file
-          setGlbUrl("/watermelon.glb");
         }
       } catch (e) {
         console.error("[xaeuzinha] Failed to fetch NFT metadata:", e);
-        // Fallback to local GLB file
-        setGlbUrl("/watermelon.glb");
       }
     })();
   }, []);
