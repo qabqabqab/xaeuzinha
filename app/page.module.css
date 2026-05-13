@@ -46,13 +46,12 @@
 */
 .title {
   font-family: 'Mouse Memoirs', 'Comic Sans MS', cursive;
-  font-size: 38px;
-  line-height: 1.25;
+  font-size: 46px;
+  line-height: 1.2;
   color: #fff;
   -webkit-text-stroke: 4px #111;
   paint-order: stroke fill;
   text-align: center;
-  /* no text-shadow — stroke is the actual stroke */
 }
 
 /* ─── Animated rainbow text ──────────────────── */
@@ -133,7 +132,7 @@
 
 .subtitle {
   font-family: 'Mouse Memoirs', 'Comic Sans MS', cursive;
-  font-size: 20px;
+  font-size: 24px;
   color: #fff;
   line-height: 1.4;
   -webkit-text-stroke: 2.5px #111;

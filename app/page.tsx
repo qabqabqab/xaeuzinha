@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import sdk from "@farcaster/miniapp-sdk";
 import styles from "./page.module.css";
+import GLBViewer from "../components/GLBViewer";
 
 const NFT_COLLECTION = "0x3a005d81ec81f9f48f973c433206ca7ef907721a";
 const NFT_TOKEN_ID = "4";
@@ -45,17 +46,6 @@ export default function Home() {
   useEffect(() => {
     const t = setTimeout(() => setSdkReady(true), 2000);
     sdk.actions.ready().catch(() => {}).finally(() => { clearTimeout(t); setSdkReady(true); });
-  }, []);
-
-  // Load model-viewer web component
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!document.querySelector('script[src*="model-viewer"]')) {
-      const s = document.createElement("script");
-      s.type = "module";
-      s.src = "https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js";
-      document.head.appendChild(s);
-    }
   }, []);
 
   // Fetch NFT metadata — try to upgrade to the real GLB from In Process API
@@ -174,32 +164,7 @@ export default function Home() {
 
       {/* 3D GLB viewer */}
       <div className={styles.modelWrap}>
-        <div className={styles.modelInner}>
-          {glbUrl ? (
-            // @ts-ignore
-            <model-viewer
-              src={glbUrl}
-              poster={posterUrl || undefined}
-              alt="xaeuzinha ceramic sculpture"
-              camera-controls
-              enable-pan
-              shadow-intensity="0.5"
-              interaction-prompt="auto"
-              style={{
-                width: "100%",
-                height: "300px",
-                background: "transparent",
-                display: "block",
-                touchAction: "none",
-              }}
-            />
-          ) : (
-            <div className={styles.modelPlaceholder}>
-              <div className={styles.modelSpinner} />
-              <p className={styles.modelLoadingText}>loading 3D model…</p>
-            </div>
-          )}
-        </div>
+        {glbUrl && <GLBViewer src={glbUrl} width={300} height={300} />}
       </div>
 
       {/* Interaction card */}
