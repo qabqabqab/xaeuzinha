@@ -154,25 +154,23 @@
 }
 
 /* ─── 3D Model viewer ────────────────────────── */
-/* 
-  px-12 equivalent on each side = ~48px, but we use 10px here for breathing room.
-  touch-action on the wrapper allows page scroll, model-viewer handles its own drag.
-*/
 .modelWrap {
   width: 100%;
-  padding: 0 10px; /* breathing room — user can scroll by touching this margin */
   margin-bottom: 24px;
   display: flex;
   justify-content: center;
+  /* No padding here — let model-viewer fill naturally */
 }
 
 .modelInner {
-  width: 80%;
-  max-width: 280px;
-  aspect-ratio: 1 / 1.1;
+  width: 85%;
+  max-width: 300px;
+  height: 300px; /* explicit px height — model-viewer needs this, not aspect-ratio */
   border-radius: 24px;
   background: rgba(255,255,255,0.05);
-  /* overflow:hidden was blocking pointer/touch events on model-viewer edges */
+  /* No overflow:hidden — blocks pointer events */
+  /* No touch-action — model-viewer handles its own */
+  position: relative;
 }
 
 .modelPlaceholder {

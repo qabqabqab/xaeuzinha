@@ -182,11 +182,18 @@ export default function Home() {
               poster={posterUrl || undefined}
               alt="xaeuzinha ceramic sculpture"
               auto-rotate
+              auto-rotate-delay="0"
               camera-controls
+              enable-pan
               shadow-intensity="0.5"
               interaction-prompt="auto"
-              loading="lazy"
-              style={{ width: "100%", height: "100%", background: "transparent", touchAction: "none" }}
+              style={{
+                width: "100%",
+                height: "300px",
+                background: "transparent",
+                display: "block",
+                touchAction: "none",
+              }}
             />
           ) : (
             <div className={styles.modelPlaceholder}>
