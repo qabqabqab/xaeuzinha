@@ -10,6 +10,21 @@ const APP_NAME = "xaeuzinha";
 
 const OG_IMAGE = `https://api.inprocess.world/api/og/moment?collectionAddress=${NFT_COLLECTION}&tokenId=${NFT_TOKEN_ID}&chainId=${CHAIN_ID}`;
 
+const miniappMeta = {
+  version: "1",
+  imageUrl: OG_IMAGE,
+  button: {
+    title: "Mint",
+    action: {
+      type: "launch_frame",
+      name: APP_NAME,
+      url: APP_URL,
+      splashImageUrl: OG_IMAGE,
+      splashBackgroundColor: "#e05a4e",
+    },
+  },
+};
+
 export const metadata: Metadata = {
   title: APP_NAME,
   openGraph: {
@@ -18,20 +33,7 @@ export const metadata: Metadata = {
     url: APP_URL,
   },
   other: {
-    "fc:miniapp": JSON.stringify({
-      version: "1",
-      imageUrl: OG_IMAGE,
-      button: {
-        title: "Mint",
-        action: {
-          type: "launch_frame",
-          name: APP_NAME,
-          url: APP_URL,
-          splashImageUrl: OG_IMAGE,
-          splashBackgroundColor: "#e05a4e",
-        },
-      },
-    }),
+    "fc:miniapp": JSON.stringify(miniappMeta),
   },
 };
 
@@ -39,6 +41,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        {/* Viewport essencial para iOS — evita zoom e resize ao abrir teclado */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content"
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

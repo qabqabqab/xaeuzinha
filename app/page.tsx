@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import sdk from "@farcaster/miniapp-sdk";
 import styles from "./page.module.css";
@@ -27,6 +27,7 @@ function RainbowStrong({ children, className }: { children: React.ReactNode; cla
 
 export default function Home() {
   const [sdkReady, setSdkReady] = useState(false);
+  const sdkInitialized = useRef(false);
   const [glbUrl, setGlbUrl] = useState<string | null>("/watermelon.glb");
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [comment, setComment] = useState("");
@@ -42,10 +43,42 @@ export default function Home() {
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
 
-  // Init Farcaster SDK
+  // Init Farcaster SDK — robusto para iOS
   useEffect(() => {
-    const t = setTimeout(() => setSdkReady(true), 2000);
-    sdk.actions.ready().catch(() => {}).finally(() => { clearTimeout(t); setSdkReady(true); });
+    if (sdkInitialized.current) return;
+    sdkInitialized.current = true;
+
+    let resolved = false;
+
+    const markReady = () => {
+      if (!resolved) {
+        resolved = true;
+        setSdkReady(true);
+      }
+    };
+
+    // Fallback timeout: se o SDK demorar mais de 3s, continua mesmo assim
+    const fallbackTimer = setTimeout(markReady, 3000);
+
+    // Tenta chamar sdk.actions.ready() — necessário para o Farcaster remover a splash screen
+    const initSdk = async () => {
+      try {
+        await sdk.actions.ready();
+      } catch {
+        // Ignora erros — pode falhar fora do contexto Farcaster (browser normal)
+      } finally {
+        clearTimeout(fallbackTimer);
+        markReady();
+      }
+    };
+
+    // Pequeno delay para garantir que o DOM está pronto no iOS WebKit
+    const initTimer = setTimeout(initSdk, 100);
+
+    return () => {
+      clearTimeout(fallbackTimer);
+      clearTimeout(initTimer);
+    };
   }, []);
 
   // Fetch NFT metadata — try to upgrade to the real GLB from In Process API
@@ -179,6 +212,12 @@ export default function Home() {
             onChange={(e) => setComment(e.target.value)}
             rows={2}
             maxLength={280}
+            // iOS: evita auto-focus e evita abrir teclado ao carregar
+            autoFocus={false}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
           />
           <div className={styles.commentUnderline} />
         </div>
@@ -204,11 +243,15 @@ export default function Home() {
         {mintAmount === "custom" && (
           <input
             type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
             min={1}
             className={styles.customInput}
             placeholder="How many?"
             value={customAmount}
             onChange={(e) => setCustomAmount(e.target.value)}
+            autoFocus={false}
+            autoComplete="off"
           />
         )}
 
