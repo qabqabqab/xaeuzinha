@@ -2,18 +2,9 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "api.inprocess.world",
-      },
-      {
-        protocol: "https",
-        hostname: "*.arweave.net",
-      },
-      {
-        protocol: "https",
-        hostname: "arweave.net",
-      },
+      { protocol: "https", hostname: "api.inprocess.world" },
+      { protocol: "https", hostname: "*.arweave.net" },
+      { protocol: "https", hostname: "arweave.net" },
     ],
   },
 };
