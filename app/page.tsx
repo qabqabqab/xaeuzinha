@@ -184,9 +184,9 @@ export default function Home() {
               auto-rotate
               camera-controls
               shadow-intensity="0.5"
-              touch-action="pan-y"
+              interaction-prompt="auto"
               loading="lazy"
-              style={{ width: "100%", height: "100%", background: "transparent" }}
+              style={{ width: "100%", height: "100%", background: "transparent", touchAction: "none" }}
             />
           ) : (
             <div className={styles.modelPlaceholder}>

@@ -3,7 +3,7 @@
   min-height: 100vh;
   max-width: 420px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -171,8 +171,8 @@
   max-width: 280px;
   aspect-ratio: 1 / 1.1;
   border-radius: 24px;
-  overflow: hidden;
   background: rgba(255,255,255,0.05);
+  /* overflow:hidden was blocking pointer/touch events on model-viewer edges */
 }
 
 .modelPlaceholder {
