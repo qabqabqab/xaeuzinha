@@ -62,12 +62,36 @@ export default function Home() {
         );
         if (!res.ok) return;
         const data = await res.json();
-        // content.uri is the actual 3D file (GLB/GLTF)
-        const glb = data?.metadata?.content?.uri;
-        const img = data?.metadata?.image;
+
+        // Try multiple known paths for GLB/GLTF in In Process API responses
+        const glb =
+          data?.metadata?.content?.uri ||
+          data?.metadata?.animation_url ||
+          data?.metadata?.model ||
+          data?.content?.uri ||
+          data?.animation_url ||
+          data?.model ||
+          // sometimes it's nested under "asset"
+          data?.asset?.uri ||
+          data?.metadata?.asset?.uri ||
+          null;
+
+        const img =
+          data?.metadata?.image ||
+          data?.image ||
+          data?.metadata?.thumbnail ||
+          null;
+
         if (glb) setGlbUrl(glb);
         if (img) setPosterUrl(img);
-      } catch {}
+
+        // Debug: log full response so you can inspect the real shape
+        if (!glb) {
+          console.warn("[xaeuzinha] GLB not found. Full API response:", JSON.stringify(data, null, 2));
+        }
+      } catch (e) {
+        console.error("[xaeuzinha] Failed to fetch NFT metadata:", e);
+      }
     })();
   }, []);
 
