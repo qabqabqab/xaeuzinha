@@ -19,9 +19,14 @@ function RainbowText({ children, className }: { children: React.ReactNode; class
   return <span className={`${styles.rainbowAnimated} ${className || ""}`}>{children}</span>;
 }
 
+// Stronger rainbow stroke — same as the MINT button. Use for qabqabqab and "more mints" line
+function RainbowStrong({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <span className={`${styles.rainbowStrong} ${className || ""}`}>{children}</span>;
+}
+
 export default function Home() {
   const [sdkReady, setSdkReady] = useState(false);
-  const [glbUrl, setGlbUrl] = useState<string | null>(null);
+  const [glbUrl, setGlbUrl] = useState<string | null>("/watermelon.glb");
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [mintAmount, setMintAmount] = useState<MintAmount>(1);
@@ -53,7 +58,8 @@ export default function Home() {
     }
   }, []);
 
-  // Fetch NFT metadata — extract GLB from content.uri
+  // Fetch NFT metadata — try to upgrade to the real GLB from In Process API
+  // Falls back silently to the local /watermelon.glb already set in state
   useEffect(() => {
     (async () => {
       try {
@@ -62,36 +68,17 @@ export default function Home() {
         );
         if (!res.ok) return;
         const data = await res.json();
-
-        // Try multiple known paths for GLB/GLTF in In Process API responses
         const glb =
           data?.metadata?.content?.uri ||
           data?.metadata?.animation_url ||
           data?.metadata?.model ||
           data?.content?.uri ||
-          data?.animation_url ||
-          data?.model ||
-          // sometimes it's nested under "asset"
-          data?.asset?.uri ||
-          data?.metadata?.asset?.uri ||
-          null;
-
-        const img =
-          data?.metadata?.image ||
-          data?.image ||
-          data?.metadata?.thumbnail ||
-          null;
-
-        if (glb) setGlbUrl(glb);
+          data?.animation_url;
+        const img = data?.metadata?.image || data?.image;
+        if (glb) setGlbUrl(glb);   // upgrade to remote only if found
         if (img) setPosterUrl(img);
+      } catch {}
 
-        // Debug: log full response so you can inspect the real shape
-        if (!glb) {
-          console.warn("[xaeuzinha] GLB not found. Full API response:", JSON.stringify(data, null, 2));
-        }
-      } catch (e) {
-        console.error("[xaeuzinha] Failed to fetch NFT metadata:", e);
-      }
     })();
   }, []);
 
@@ -156,7 +143,7 @@ export default function Home() {
       {/* Title with proper stroke */}
       <div className={styles.titleBlock}>
         <h1 className={styles.title}>
-          Win a <RainbowText>qabqabqab</RainbowText>
+          Win a <RainbowStrong>qabqabqab</RainbowStrong>
           <br />ceramic piece 🎁
         </h1>
       </div>
@@ -173,7 +160,7 @@ export default function Home() {
           <span className={styles.colorGreen}>99x</span> to
           <br />increase your chances!!!
         </p>
-        <p className={`${styles.subtitle} ${styles.rainbowAnimated}`}>more mints = more chances.</p>
+        <p className={styles.subtitle}><RainbowStrong>more mints = more chances.</RainbowStrong></p>
       </div>
 
       {/* Body copy */}
