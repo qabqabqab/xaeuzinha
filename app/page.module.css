@@ -1,0 +1,481 @@
+/* ─── Layout ─────────────────────────────────── */
+.main {
+  min-height: 100vh;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ─── Header ─────────────────────────────────── */
+.headerRow {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 0 6px;
+}
+
+.walletBtn {
+  font-family: 'Mouse Memoirs', 'Comic Sans MS', cursive;
+  font-size: 13px;
+  background: rgba(255,255,255,0.88);
+  border: 2px solid rgba(0,0,0,0.6);
+  border-radius: 20px;
+  padding: 6px 16px;
+  cursor: pointer;
+  color: #111;
+  letter-spacing: 0.02em;
+  transition: background 0.15s;
+}
+.walletBtn:hover { background: #fff; }
+
+/* ─── Title ──────────────────────────────────── */
+.titleBlock {
+  width: 100%;
+  text-align: center;
+  margin: 20px 0 14px;
+}
+
+/*
+  Real CSS text-stroke using -webkit-text-stroke.
+  Works in all modern browsers (Chrome, Safari, Firefox via paint-order).
+  No fake drop-shadow trick.
+*/
+.title {
+  font-family: 'Mouse Memoirs', 'Comic Sans MS', cursive;
+  font-size: 38px;
+  line-height: 1.25;
+  color: #fff;
+  -webkit-text-stroke: 4px #111;
+  paint-order: stroke fill;
+  text-align: center;
+  /* no text-shadow — stroke is the actual stroke */
+}
+
+/* ─── Animated rainbow text ──────────────────── */
+/*
+  Gradient background shifts continuously to create motion.
+  -webkit-background-clip: text clips the gradient to the letter shapes.
+  -webkit-text-fill-color: transparent makes the gradient visible.
+  -webkit-text-stroke is overridden here to add a thin dark outline on top.
+*/
+.rainbowAnimated {
+  background: linear-gradient(
+    90deg,
+    #ff4444 0%,
+    #ff9900 14%,
+    #ffee00 28%,
+    #44ff44 42%,
+    #00ccff 57%,
+    #aa44ff 71%,
+    #ff44aa 85%,
+    #ff4444 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Reset inherited stroke from parent elements */
+  -webkit-text-stroke: 0px transparent;
+  animation: rainbowShift 3s linear infinite;
+  /* Outline on rainbow text via filter (works with gradient text) */
+  filter: drop-shadow(1px 0 0 rgba(0,0,0,0.55))
+          drop-shadow(-1px 0 0 rgba(0,0,0,0.55))
+          drop-shadow(0 1px 0 rgba(0,0,0,0.55))
+          drop-shadow(0 -1px 0 rgba(0,0,0,0.55));
+}
+
+/* Same gradient as rainbowAnimated but with the stronger stroke of mintBtnText.
+   Use this for qabqabqab (inside title) and "more mints = more chances." */
+.rainbowStrong {
+  background: linear-gradient(
+    90deg,
+    #ff4444 0%,
+    #ff9900 14%,
+    #ffee00 28%,
+    #44ff44 42%,
+    #00ccff 57%,
+    #aa44ff 71%,
+    #ff44aa 85%,
+    #ff4444 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0px transparent;
+  animation: rainbowShift 3s linear infinite;
+  /* Exact same filter as mintBtnText — this is the stroke that looks perfect */
+  filter: drop-shadow(1.5px 0 0 rgba(0,0,0,0.7))
+          drop-shadow(-1.5px 0 0 rgba(0,0,0,0.7))
+          drop-shadow(0 1.5px 0 rgba(0,0,0,0.7))
+          drop-shadow(0 -1.5px 0 rgba(0,0,0,0.7));
+}
+
+@keyframes rainbowShift {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ─── Subtitles ──────────────────────────────── */
+.subtitleBlock {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subtitle {
+  font-family: 'Mouse Memoirs', 'Comic Sans MS', cursive;
+  font-size: 20px;
+  color: #fff;
+  line-height: 1.4;
+  -webkit-text-stroke: 2.5px #111;
+  paint-order: stroke fill;
+}
+
+.colorCyan  { color: #00ddff; -webkit-text-stroke: 1.5px #111; }
+.colorGreen { color: #44ff66; -webkit-text-stroke: 1.5px #111; }
+
+/* ─── Body copy ──────────────────────────────── */
+.bodyText {
+  width: 100%;
+  font-family: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', cursive;
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1.6;
+  color: #fff;
+  margin-bottom: 20px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+}
+
+/* ─── 3D Model viewer ────────────────────────── */
+.modelWrap {
+  width: 100%;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  /* No padding here — let model-viewer fill naturally */
+}
+
+.modelInner {
+  width: 85%;
+  max-width: 300px;
+  height: 300px; /* explicit px height — model-viewer needs this, not aspect-ratio */
+  border-radius: 24px;
+  background: rgba(255,255,255,0.05);
+  /* No overflow:hidden — blocks pointer events */
+  /* No touch-action — model-viewer handles its own */
+  position: relative;
+}
+
+.modelPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.modelSpinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.modelLoadingText {
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Interaction card ───────────────────────── */
+/* Matches the AI Studio reference: blue-ish glassmorphism card */
+.card {
+  width: 100%;
+  background: #b4c7e7;
+  border-radius: 2.4rem;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+  /* Animated rainbow border — 2px inset gradient */
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 2.5px transparent,
+              0 8px 32px rgba(0,0,0,0.25);
+  position: relative;
+}
+
+/* Rainbow animated border on card */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 2.5rem;
+  background: linear-gradient(90deg, #ff4444, #ff9900, #ffee00, #44ff44, #00ccff, #aa44ff, #ff44aa, #ff4444);
+  background-size: 200% auto;
+  animation: rainbowShift 3s linear infinite;
+  z-index: -1;
+}
+
+/* ─── Comment area ───────────────────────────── */
+.commentSection { display: flex; flex-direction: column; gap: 8px; }
+
+.commentLabel {
+  font-family: 'Mouse Memoirs', 'Comic Sans MS', cursive;
+  font-size: 20px;
+  font-weight: 900;
+  color: #111;
+  letter-spacing: -0.01em;
+}
+
+.commentArea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+  font-weight: bold;
+  font-size: 15px;
+  color: #111;
+  resize: none;
+  outline: none;
+  line-height: 1.5;
+  padding: 4px 0;
+}
+.commentArea::placeholder { color: rgba(0,0,0,0.45); }
+
+.commentUnderline {
+  height: 2px;
+  background: #111;
+  border-radius: 1px;
+}
+
+/* ─── Amount grid ────────────────────────────── */
+.amountGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.amountBtn {
+  font-family: 'Mouse Memoirs', 'Comic Sans MS', cursive;
+  font-size: 18px;
+  font-weight: 900;
+  color: #111;
+  background: #ced7e0;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 0;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.amountBtn:hover { background: rgba(255,255,255,0.6); }
+
+.amountBtnActive {
+  background: #c8aee5;
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.amountBtnCustomActive {
+  background: #f8a060;
+  transform: scale(1.05);
+}
+
+.customBtnText {
+  font-size: 13px;
+  letter-spacing: -0.03em;
+  font-family: 'Mouse Memoirs', cursive;
+}
+
+/* ─── Custom amount input ─────────────────────── */
+.customInput {
+  width: 100%;
+  background: rgba(255,255,255,0.4);
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  font-family: 'Comic Sans MS', cursive;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  color: #111;
+  outline: none;
+}
+.customInput:focus { background: rgba(255,255,255,0.6); }
+
+/* ─── Status messages ────────────────────────── */
+.errorMsg {
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 13px;
+  color: #c00;
+  text-align: center;
+}
+
+.successBox {
+  background: rgba(100, 220, 100, 0.25);
+  border: 2px solid rgba(100, 220, 100, 0.5);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 14px;
+  font-weight: bold;
+  color: #1a6a1a;
+  animation: bounceIn 0.4s ease;
+}
+@keyframes bounceIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.txLink {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #1a6a1a;
+}
+
+/* ─── MINT button ────────────────────────────── */
+/* Green glossy button from design, rainbow text inside */
+.mintBtn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(180deg, #b0e8a0 0%, #90d070 50%, #78c060 100%);
+  border: 4px solid rgba(255,255,255,0.55);
+  border-radius: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.4);
+  transition: transform 0.1s, box-shadow 0.1s;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mintBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+.mintBtn:active:not(:disabled) { transform: translateY(1px); }
+.mintBtn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.mintBtnText {
+  font-family: 'Mouse Memoirs', 'Comic Sans MS', cursive;
+  font-size: 36px;
+  letter-spacing: 0.1em;
+  /* Stroke on rainbow text via filter (same technique as above) */
+  filter: drop-shadow(1.5px 0 0 rgba(0,0,0,0.7))
+          drop-shadow(-1.5px 0 0 rgba(0,0,0,0.7))
+          drop-shadow(0 1.5px 0 rgba(0,0,0,0.7))
+          drop-shadow(0 -1.5px 0 rgba(0,0,0,0.7));
+}
+
+/* loading dots */
+.dots { display: inline-flex; gap: 6px; align-items: center; }
+.dots span {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #2d5a20;
+  animation: bounce 0.8s infinite;
+}
+.dots span:nth-child(2) { animation-delay: 0.15s; }
+.dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+/* ─── Community / comments ───────────────────── */
+.community {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1.5px solid rgba(0,0,0,0.12);
+  padding-top: 16px;
+}
+
+.communityTitle {
+  font-family: 'Mouse Memoirs', 'Comic Sans MS', cursive;
+  font-size: 20px;
+  color: #111;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.communityCount {
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 11px;
+  font-weight: bold;
+  background: rgba(255,255,255,0.5);
+  padding: 3px 10px;
+  border-radius: 20px;
+  color: #333;
+}
+
+.emptyState {
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 13px;
+  color: rgba(0,0,0,0.5);
+  text-align: center;
+  padding: 16px 0;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.commentCard {
+  background: rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.commentCardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.commentUser {
+  font-family: 'Mouse Memoirs', cursive;
+  font-size: 12px;
+  color: #1a3a7a;
+  background: rgba(100,150,255,0.15);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.commentDate {
+  font-size: 10px;
+  color: rgba(0,0,0,0.4);
+  font-family: monospace;
+}
+
+.commentContent {
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 13px;
+  color: #222;
+  line-height: 1.4;
+}
+
+/* ─── Footer ─────────────────────────────────── */
+.footer {
+  font-family: 'Mouse Memoirs', cursive;
+  font-size: 20px;
+  font-style: italic;
+  color: rgba(255,255,255,0.85);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  margin: 8px 0 32px;
+}
