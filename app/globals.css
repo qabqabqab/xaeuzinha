@@ -1,0 +1,47 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --font-display: 'Mouse Memoirs', 'Comic Sans MS', 'Comic Sans', cursive;
+  --font-body: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', cursive;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body {
+  background: linear-gradient(
+    180deg,
+    #e05a4e 0%,
+    #c45a6e 12%,
+    #9b6aaa 25%,
+    #7b7fcc 38%,
+    #5b8dd9 50%,
+    #7a9dc8 62%,
+    #9aafc0 72%,
+    #a8b8b0 82%,
+    #9db4a0 100%
+  );
+  min-height: 100vh;
+}
+
+/* Animated rainbow keyframes used for the text shimmer */
+@keyframes rainbowShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+model-viewer {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  --poster-color: transparent;
+}
