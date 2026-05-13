@@ -1,39 +1,28 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import sdk from "@farcaster/miniapp-sdk";
 import styles from "./page.module.css";
 
-// ===== NFT CONFIG =====
 const NFT_COLLECTION = "0x3a005d81ec81f9f48f973c433206ca7ef907721a";
 const NFT_TOKEN_ID = "4";
 const CHAIN_ID = 8453;
 const IN_PROCESS_URL = `https://www.inprocess.world/collect/base:${NFT_COLLECTION}/${NFT_TOKEN_ID}`;
-// ======================
 
-type Comment = {
-  id: string;
-  sender: string;
-  username: string;
-  comment: string;
-  timestamp: number;
-};
-
-type Collector = {
-  id: string;
-  collector: string;
-  username: string;
-  amount: number;
-  transactionHash: string;
-  timestamp: number;
-};
-
+type Comment = { id: string; sender: string; username: string; comment: string; timestamp: number };
+type Collector = { id: string; collector: string; username: string; amount: number; transactionHash: string; timestamp: number };
 type MintAmount = 1 | 3 | 7 | "custom";
+
+// Rainbow animated text rendered as a styled span
+function RainbowText({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <span className={`${styles.rainbowAnimated} ${className || ""}`}>{children}</span>;
+}
 
 export default function Home() {
   const [sdkReady, setSdkReady] = useState(false);
   const [glbUrl, setGlbUrl] = useState<string | null>(null);
+  const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [mintAmount, setMintAmount] = useState<MintAmount>(1);
   const [customAmount, setCustomAmount] = useState("");
@@ -42,139 +31,86 @@ export default function Home() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [txHash, setTxHash] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-  const modelRef = useRef<HTMLElement | null>(null);
 
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
 
-  // Init SDK
+  // Init Farcaster SDK
   useEffect(() => {
-    sdk.actions.ready().catch(() => {}).finally(() => setSdkReady(true));
+    const t = setTimeout(() => setSdkReady(true), 2000);
+    sdk.actions.ready().catch(() => {}).finally(() => { clearTimeout(t); setSdkReady(true); });
   }, []);
 
-  // Load model-viewer script
+  // Load model-viewer web component
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!document.querySelector('script[src*="model-viewer"]')) {
-      const script = document.createElement("script");
-      script.type = "module";
-      script.src = "https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js";
-      document.head.appendChild(script);
+      const s = document.createElement("script");
+      s.type = "module";
+      s.src = "https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js";
+      document.head.appendChild(s);
     }
   }, []);
 
-  // Fetch NFT info to get GLB url
+  // Fetch NFT metadata — extract GLB from content.uri
   useEffect(() => {
-    const fetchMoment = async () => {
+    (async () => {
       try {
         const res = await fetch(
           `https://api.inprocess.world/api/moment?collectionAddress=${NFT_COLLECTION}&tokenId=${NFT_TOKEN_ID}&chainId=${CHAIN_ID}`
         );
         if (!res.ok) return;
         const data = await res.json();
-        // content.uri is the GLB, metadata.image is the poster
-        const contentUri = data?.metadata?.content?.uri;
-        if (contentUri) setGlbUrl(contentUri);
-      } catch {
-        console.log("Could not fetch moment info");
-      }
-    };
-    fetchMoment();
+        // content.uri is the actual 3D file (GLB/GLTF)
+        const glb = data?.metadata?.content?.uri;
+        const img = data?.metadata?.image;
+        if (glb) setGlbUrl(glb);
+        if (img) setPosterUrl(img);
+      } catch {}
+    })();
   }, []);
 
-  // Fetch comments
   const fetchComments = async () => {
     try {
-      const res = await fetch(
-        `https://api.inprocess.world/api/moment/comments?collectionAddress=${NFT_COLLECTION}&tokenId=${NFT_TOKEN_ID}&chainId=${CHAIN_ID}`
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      setComments(data.comments || []);
+      const r = await fetch(`https://api.inprocess.world/api/moment/comments?collectionAddress=${NFT_COLLECTION}&tokenId=${NFT_TOKEN_ID}&chainId=${CHAIN_ID}`);
+      if (r.ok) setComments((await r.json()).comments || []);
     } catch {}
   };
 
-  // Fetch collectors
   const fetchCollectors = async () => {
     try {
-      const res = await fetch(
-        `https://api.inprocess.world/api/moment/collectors?collectionAddress=${NFT_COLLECTION}&tokenId=${NFT_TOKEN_ID}&chainId=${CHAIN_ID}`
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      setCollectors(data.collectors || []);
+      const r = await fetch(`https://api.inprocess.world/api/moment/collectors?collectionAddress=${NFT_COLLECTION}&tokenId=${NFT_TOKEN_ID}&chainId=${CHAIN_ID}`);
+      if (r.ok) setCollectors((await r.json()).collectors || []);
     } catch {}
   };
 
-  useEffect(() => {
-    fetchComments();
-    fetchCollectors();
-  }, []);
+  useEffect(() => { fetchComments(); fetchCollectors(); }, []);
 
-  const getAmount = (): number => {
-    if (mintAmount === "custom") return parseInt(customAmount) || 1;
-    return mintAmount;
-  };
+  const getAmount = () => mintAmount === "custom" ? (parseInt(customAmount) || 1) : mintAmount;
 
-  const handleConnect = () => {
-    if (connectors[0]) connect({ connector: connectors[0] });
-  };
+  const handleConnect = () => { if (connectors[0]) connect({ connector: connectors[0] }); };
 
   const handleMint = async () => {
-    if (!isConnected) {
-      handleConnect();
-      return;
-    }
-
+    if (!isConnected) { handleConnect(); return; }
     const amount = getAmount();
-    if (isNaN(amount) || amount < 1) {
-      setErrorMsg("Por favor insira uma quantidade válida.");
-      setStatus("error");
-      return;
-    }
-
-    setStatus("loading");
-    setErrorMsg("");
-
+    setStatus("loading"); setErrorMsg("");
     try {
-      // Call In•Process collect API via our proxy route (avoids CORS + keeps API key server-side)
       const res = await fetch("/api/collect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          collectionAddress: NFT_COLLECTION,
-          tokenId: NFT_TOKEN_ID,
-          chainId: CHAIN_ID,
-          amount,
-          comment: comment.trim(),
-          walletAddress: address,
-        }),
+        body: JSON.stringify({ collectionAddress: NFT_COLLECTION, tokenId: NFT_TOKEN_ID, chainId: CHAIN_ID, amount, comment: comment.trim() }),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Erro ao coletar. Tente novamente.");
-      }
-
+      if (!res.ok) throw new Error(data.error || "error");
       setTxHash(data.hash || "");
       setStatus("success");
       setComment("");
-      // Refresh comments and collectors
-      setTimeout(() => {
-        fetchComments();
-        fetchCollectors();
-      }, 3000);
-    } catch (err: unknown) {
-      // Fallback: open In•Process directly
-      try {
-        await sdk.actions.openUrl(IN_PROCESS_URL);
-        setStatus("idle");
-      } catch {
-        window.open(IN_PROCESS_URL, "_blank");
-        setStatus("idle");
-      }
+      setTimeout(() => { fetchComments(); fetchCollectors(); }, 3000);
+    } catch {
+      // Fallback: open In•Process
+      try { await sdk.actions.openUrl(IN_PROCESS_URL); } catch { window.open(IN_PROCESS_URL, "_blank"); }
+      setStatus("idle");
     }
   };
 
@@ -182,206 +118,171 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-      {/* Header: connect wallet button */}
+      {/* Connect wallet button */}
       <div className={styles.headerRow}>
         {isConnected ? (
           <button className={styles.walletBtn} onClick={() => disconnect()}>
             {address?.slice(0, 6)}…{address?.slice(-4)}
           </button>
         ) : (
-          <button className={styles.walletBtn} onClick={handleConnect}>
-            connect wallet
-          </button>
+          <button className={styles.walletBtn} onClick={handleConnect}>connect wallet</button>
         )}
       </div>
 
-      {/* Title */}
+      {/* Title with proper stroke */}
       <div className={styles.titleBlock}>
         <h1 className={styles.title}>
-          Win a <span className={styles.rainbow}>qabqabqab</span>
+          Win a <RainbowText>qabqabqab</RainbowText>
           <br />ceramic piece 🎁
         </h1>
       </div>
 
-      {/* Subtitle lines */}
+      {/* Subtitle */}
       <div className={styles.subtitleBlock}>
         <p className={styles.subtitle}>
-          Mint <span className={styles.colorGreen}>1x</span> for a chance to receive
+          Mint <span className={styles.colorCyan}>1x</span> for a chance to receive
           <br />&apos;xaeuzinha&apos; at home.
         </p>
         <p className={styles.subtitle}>
           Mint <span className={styles.colorGreen}>2x</span>,{" "}
-          <span className={styles.colorBlue}>3x</span> or{" "}
-          <span className={styles.colorRed}>99x</span> to
+          <span className={styles.colorGreen}>3x</span> or{" "}
+          <span className={styles.colorGreen}>99x</span> to
           <br />increase your chances!!!
         </p>
-        <p className={styles.subtitleRainbow}>
-          more mints = more chances.
-        </p>
+        <p className={`${styles.subtitle} ${styles.rainbowAnimated}`}>more mints = more chances.</p>
       </div>
 
-      {/* Body text */}
+      {/* Body copy */}
       <div className={styles.bodyText}>
-        <p>
-          &apos;xaeuzinha&apos; is the final outcome of noun.wtf Grant #29.
-          Hand-sculpted and created specifically for this occasion,
-          it offers a chance for someone to own one of my works
-          at an accessible price, starting at 1 USD.
-        </p>
+        <p>&apos;xaeuzinha&apos; is the final outcome of noun.wtf Grant #29. Hand-sculpted and created specifically for this occasion, it offers a chance for someone to own one of my works at an accessible price, starting at 1 USD.</p>
         <br />
-        <p>
-          To participate, simply collect the piece and drop your
-          Farcaster username in the comments.
-        </p>
+        <p>To participate, simply collect the piece and drop your Farcaster username in the comments.</p>
         <br />
-        <p>
-          The results will be announced on May 15. I&apos;ll reach out if
-          you&apos;re selected as the winner.
-        </p>
+        <p>The results will be announced on May 15. I&apos;ll reach out if you&apos;re selected as the winner.</p>
       </div>
 
-      {/* GLB 3D Viewer */}
-      <div className={styles.modelContainer}>
-        {glbUrl ? (
-          // @ts-ignore — model-viewer is a custom element
-          <model-viewer
-            ref={modelRef}
-            src={glbUrl}
-            auto-rotate
-            camera-controls
-            shadow-intensity="0"
-            exposure="1"
-            style={{ width: "100%", height: "100%", background: "transparent" }}
-            poster={`https://api.inprocess.world/api/og/moment?collectionAddress=${NFT_COLLECTION}&tokenId=${NFT_TOKEN_ID}&chainId=${CHAIN_ID}`}
+      {/* 3D GLB viewer */}
+      <div className={styles.modelWrap}>
+        <div className={styles.modelInner}>
+          {glbUrl ? (
+            // @ts-ignore
+            <model-viewer
+              src={glbUrl}
+              poster={posterUrl || undefined}
+              alt="xaeuzinha ceramic sculpture"
+              auto-rotate
+              camera-controls
+              shadow-intensity="0.5"
+              touch-action="pan-y"
+              loading="lazy"
+              style={{ width: "100%", height: "100%", background: "transparent" }}
+            />
+          ) : (
+            <div className={styles.modelPlaceholder}>
+              <div className={styles.modelSpinner} />
+              <p className={styles.modelLoadingText}>loading 3D model…</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Interaction card */}
+      <div className={styles.card}>
+        {/* Comment */}
+        <div className={styles.commentSection}>
+          <label className={styles.commentLabel}>Comment Section</label>
+          <textarea
+            className={styles.commentArea}
+            placeholder="don't forget to leave your @username"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={2}
+            maxLength={280}
           />
-        ) : (
-          <div className={styles.modelPlaceholder}>
-            <div className={styles.modelLoader} />
-          </div>
-        )}
-      </div>
+          <div className={styles.commentUnderline} />
+        </div>
 
-      {/* Comment box */}
-      <div className={styles.commentCard}>
-        <p className={styles.commentLabel}>Comment</p>
-        <textarea
-          className={styles.commentArea}
-          placeholder="leave your @username here"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          rows={3}
-          maxLength={280}
-        />
-      </div>
-
-      {/* Amount buttons */}
-      <div className={styles.amountRow}>
-        {([1, 3, 7, "custom"] as MintAmount[]).map((val) => (
+        {/* Quantity buttons */}
+        <div className={styles.amountGrid}>
+          {([1, 3, 7] as const).map((v) => (
+            <button
+              key={v}
+              className={`${styles.amountBtn} ${mintAmount === v ? styles.amountBtnActive : ""}`}
+              onClick={() => setMintAmount(v)}
+            >{v}x</button>
+          ))}
           <button
-            key={String(val)}
-            className={`${styles.amountBtn} ${mintAmount === val ? styles.amountBtnActive : ""}`}
-            onClick={() => setMintAmount(val)}
+            className={`${styles.amountBtn} ${mintAmount === "custom" ? styles.amountBtnCustomActive : ""}`}
+            onClick={() => setMintAmount("custom")}
           >
-            {val === "custom" ? "custom" : `${val}x`}
+            <RainbowText className={styles.customBtnText}>custom</RainbowText>
           </button>
-        ))}
-      </div>
+        </div>
 
-      {/* Custom amount input */}
-      {mintAmount === "custom" && (
-        <div className={styles.customRow}>
+        {/* Custom input */}
+        {mintAmount === "custom" && (
           <input
             type="number"
             min={1}
             className={styles.customInput}
-            placeholder="how many?"
+            placeholder="How many?"
             value={customAmount}
             onChange={(e) => setCustomAmount(e.target.value)}
           />
-        </div>
-      )}
+        )}
 
-      {/* Status messages */}
-      {status === "error" && (
-        <p className={styles.errorMsg}>{errorMsg || "Algo deu errado. Tente novamente."}</p>
-      )}
-      {status === "success" && (
-        <div className={styles.successMsg}>
-          <p>✓ Coletado com sucesso!</p>
-          {txHash && (
-            <a
-              href={`https://basescan.org/tx/${txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.txLink}
-              onClick={() => sdk.actions.openUrl(`https://basescan.org/tx/${txHash}`).catch(() => {})}
-            >
-              Ver transação ↗
-            </a>
-          )}
-        </div>
-      )}
+        {/* Status */}
+        {status === "error" && <p className={styles.errorMsg}>{errorMsg || "Something went wrong."}</p>}
+        {status === "success" && (
+          <div className={styles.successBox}>
+            <p>Successfully collected! 🎉</p>
+            {txHash && (
+              <a href={`https://basescan.org/tx/${txHash}`} target="_blank" rel="noopener noreferrer" className={styles.txLink}>
+                View transaction ↗
+              </a>
+            )}
+          </div>
+        )}
 
-      {/* MINT button */}
-      <div className={styles.mintRow}>
+        {/* MINT button */}
         <button
           className={styles.mintBtn}
-          onClick={() => {
-            if (status === "success") setStatus("idle");
-            else handleMint();
-          }}
+          onClick={() => status === "success" ? setStatus("idle") : handleMint()}
           disabled={status === "loading"}
         >
           {status === "loading" ? (
-            <span className={styles.dots}>
-              <span />
-              <span />
-              <span />
-            </span>
-          ) : status === "success" ? (
-            "MINT MORE"
-          ) : isConnected ? (
-            `MINT ${effectiveAmount > 1 ? effectiveAmount + "x" : ""}`
+            <span className={styles.dots}><span /><span /><span /></span>
           ) : (
-            "MINT"
+            <RainbowText className={styles.mintBtnText}>
+              {status === "success" ? "MINT MORE" : isConnected ? `MINT` : "MINT"}
+            </RainbowText>
           )}
         </button>
+
+        {/* Community / comments */}
+        <div className={styles.community}>
+          <h3 className={styles.communityTitle}>
+            Community
+            <span className={styles.communityCount}>{collectors.length} collectors</span>
+          </h3>
+
+          {comments.length === 0 ? (
+            <p className={styles.emptyState}>Be the first to comment!</p>
+          ) : (
+            comments.map((c) => (
+              <div key={c.id} className={styles.commentCard}>
+                <div className={styles.commentCardTop}>
+                  <span className={styles.commentUser}>{c.username ? `@${c.username}` : c.sender.slice(0,6) + "…"}</span>
+                  <span className={styles.commentDate}>{new Date(c.timestamp * 1000).toLocaleDateString()}</span>
+                </div>
+                <p className={styles.commentContent}>{c.comment}</p>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
-      {/* Comments section */}
-      {comments.length > 0 && (
-        <div className={styles.commentsSection}>
-          <h3 className={styles.sectionTitle}>Comments ({comments.length})</h3>
-          {comments.map((c) => (
-            <div key={c.id} className={styles.commentItem}>
-              <span className={styles.commentUser}>
-                {c.username ? `@${c.username}` : c.sender.slice(0, 8) + "…"}
-              </span>
-              <p className={styles.commentText}>{c.comment}</p>
-              <span className={styles.commentTime}>
-                {new Date(c.timestamp * 1000).toLocaleDateString()}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Collectors section */}
-      {collectors.length > 0 && (
-        <div className={styles.collectorsSection}>
-          <h3 className={styles.sectionTitle}>Collectors ({collectors.length})</h3>
-          {collectors.map((c) => (
-            <div key={c.id} className={styles.collectorItem}>
-              <span className={styles.commentUser}>
-                {c.username ? `@${c.username}` : c.collector.slice(0, 8) + "…"}
-              </span>
-              <span className={styles.collectorAmount}>{c.amount}x</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className={styles.bottomPad} />
+      <footer className={styles.footer}>THANK YOU, ILY &lt;3</footer>
     </main>
   );
 }
