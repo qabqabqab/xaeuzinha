@@ -181,8 +181,6 @@ export default function Home() {
               src={glbUrl}
               poster={posterUrl || undefined}
               alt="xaeuzinha ceramic sculpture"
-              auto-rotate
-              auto-rotate-delay="0"
               camera-controls
               enable-pan
               shadow-intensity="0.5"
